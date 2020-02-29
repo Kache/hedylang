@@ -1,10 +1,15 @@
-start: "print " text -> print
-                      | "ask " text -> ask
-                      | "echo" -> echo
-                      |  text " " text -> invalid
+start: program
+program: command | command NEWLINE program
+command: inner_command -> command
+inner_command: "print " text -> print
+               | "ask " text -> ask
+               | "echo " text -> echo
+               |  text " " text -> invalid
 
-                text: (LETTER | DIGIT | WS_INLINE)+
+PUNCTUATION : "!" | "?" | "."  //use uppercase to indicate terminals *will* appear in the tree, lowercase will not!
+text: (LETTER | DIGIT | PUNCTUATION | WS_INLINE)+
 
-                %import common.LETTER   // imports from terminal library
-                %import common.DIGIT   // imports from terminal library
-                %import common.WS_INLINE   // imports from terminal library
+%import common.LETTER   // imports from terminal library
+%import common.DIGIT   // imports from terminal library
+%import common.WS_INLINE   // imports from terminal library
+%import common.NEWLINE   // imports from terminal library
