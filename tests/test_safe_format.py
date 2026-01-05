@@ -1,5 +1,5 @@
 import unittest
-from hedy.safe_format import safe_format
+from safe_format import safe_format
 
 
 class TestSafeFormat(unittest.TestCase):

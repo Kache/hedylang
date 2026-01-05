@@ -1,7 +1,3 @@
-[tool.doit]
-backend = "json"
-dep_file = ".doit.db.json"
-
-[tool.doit.plugins.command]
-watch = "doit_watch:Watch"
-
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

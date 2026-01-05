@@ -5,7 +5,6 @@ import textwrap
 from lark import Tree
 
 from . import exceptions
-from .content import grammars_dir
 
 
 class SourceRange:
@@ -189,11 +188,13 @@ class SourceMap:
             python_code_mapped.append(python_source_code.code)
 
     def get_grammar_rules(self):
-        with open(path.join(grammars_dir(), "level1.lark"), "r", encoding="utf-8") as file:
+        script_dir = path.abspath(path.dirname(__file__))
+
+        with open(path.join(script_dir, "grammars", "level1.lark"), "r", encoding="utf-8") as file:
             grammar_text = file.read()
 
         for i in range(2, 19):
-            with open(path.join(grammars_dir(), f'level{i}-Additions.lark'), "r", encoding="utf-8") as file:
+            with open(path.join(script_dir, "grammars", f'level{i}-Additions.lark'), "r", encoding="utf-8") as file:
                 grammar_text += '\n' + file.read()
 
         self.grammar_rules = re.findall(r"([\w.]+):", grammar_text)

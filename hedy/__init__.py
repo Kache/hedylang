@@ -1,39 +1,39 @@
-from .prefixes.normal import get_num_sys
-from .prefixes.music import present_in_notes_mapping
-from hedy.sourcemap import SourceMap, source_map_transformer
-from hedy.content import KEYWORDS
-import tempfile
-import pickle
-import os
-import hashlib
-import yaml
-from dataclasses import dataclass, field
-import regex
-import re
-from collections import namedtuple
-from .content import ALL_KEYWORD_LANGUAGES, MAX_LEVEL
-from .lang_utils import atomic_write_file, is_production
-from . import program_repair
-from . import exceptions
-from . import translation as hedy_translation
-from . import grammar as hedy_grammar
-from . import error as hedy_error
 import textwrap
 from functools import lru_cache
 
 import lark
+from website.flask_helpers import gettext_with_fallback as gettext
 from lark import Lark
 from lark.exceptions import UnexpectedEOF, UnexpectedCharacters, VisitError
 from lark import Tree, Transformer, visitors, v_args
 from os import path, getenv
+
+import . as hedy
+from . import error as hedy_error
+from . import grammar as import hedy_grammar
+from . import translation as hedy_translation
+from . import exceptions
+from . import program_repair
+from ._utils import atomic_write_file
+
+from hedy_content import ALL_KEYWORD_LANGUAGES, MAX_LEVEL
+from collections import namedtuple
+import re
+import regex
+from dataclasses import dataclass, field
+import yaml
+import hashlib
+import os
+import pickle
 import sys
-
-# This is so that all the 'hedy.exception' references below still work
-hedy = sys.modules[__name__]
-
+import tempfile
 
 # Some useful constants
+from hedy_content import KEYWORDS
+from hedy_sourcemap import SourceMap, source_map_transformer
 
+from prefixes.music import present_in_notes_mapping
+from prefixes.normal import get_num_sys
 
 HEDY_MAX_LEVEL = MAX_LEVEL
 HEDY_MAX_LEVEL_SKIPPING_FAULTY = 5
@@ -182,6 +182,20 @@ def make_values_error(command, tip, lang):
 def make_error_text(ex, lang):
     # The error text is transpiled in f-strings with ", ' and ''' quotes. The only option is to use """.
     return f'"""{hedy_error.get_error_text(ex, lang)}"""'
+
+
+def translate_suggestion(suggestion_type):
+    # Right now we only have three types of suggestion
+    # In the future we might change this if the number increases
+    if suggestion_type == 'number':
+        return gettext('suggestion_number')
+    elif suggestion_type == 'color':
+        return gettext('suggestion_color')
+    elif suggestion_type == 'note':
+        return gettext('suggestion_note')
+    elif suggestion_type == 'numbers_or_strings':
+        return gettext('suggestion_numbers_or_strings')
+    return ''
 
 
 class Command:
@@ -400,7 +414,7 @@ def get_list_keywords(commands, to_lang):
 
     translation_commands = []
     dir = path.abspath(path.dirname(__file__))
-    path_keywords = dir + "/data/keywords"
+    path_keywords = dir + "/content/keywords"
 
     to_yaml_filesname_with_path = path.join(path_keywords, to_lang + '.yaml')
     en_yaml_filesname_with_path = path.join(path_keywords, 'en' + '.yaml')
@@ -441,6 +455,10 @@ def escape_var(var):
     if isinstance(var, LookupEntry):
         var_name = var.name
     return "_" + var_name if var_name in reserved_words else var_name
+
+
+def style_command(command):
+    return f'<span class="command-highlighted">{command}</span>'
 
 
 def closest_command(input_, known_commands, threshold=2):
@@ -3625,7 +3643,7 @@ def _restore_parser_from_file_if_present(pickle_file):
     return None
 
 
-@lru_cache(maxsize=0 if is_production() else 100)
+@lru_cache(maxsize=0 if utils.is_production() else 100)
 def get_parser(level, lang="en", keep_all_tokens=False, skip_faulty=False):
     """Return the Lark parser for a given level.
     Parser generation takes about 0.5 seconds depending on the level so
@@ -4173,18 +4191,18 @@ def determine_roles(lookup, input_string, level, lang):
         assignments = [x for x in lookup.get_all() if x.name == var]
 
         if assignments[0].tree.data == 'for_list':
-            roles_dictionary[var] = 'walker_variable_role'
+            roles_dictionary[var] = gettext('walker_variable_role')
         elif assignments[0].tree.data == 'for_loop':
-            roles_dictionary[var] = 'stepper_variable_role'
+            roles_dictionary[var] = gettext('stepper_variable_role')
         elif assignments[0].type_ == 'list':
-            roles_dictionary[var] = 'list_variable_role'
+            roles_dictionary[var] = gettext('list_variable_role')
         elif len(assignments) == 1:
             if assignments[0].type_ == 'input':
-                roles_dictionary[var] = 'input_variable_role'
+                roles_dictionary[var] = gettext('input_variable_role')
             else:
-                roles_dictionary[var] = 'constant_variable_role'
+                roles_dictionary[var] = gettext('constant_variable_role')
         else:
-            roles_dictionary[var] = 'unknown_variable_role'
+            roles_dictionary[var] = gettext('unknown_variable_role')
 
     return roles_dictionary
 
